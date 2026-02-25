@@ -1,0 +1,10 @@
+# Ignore
+.env
+
+# Python's files
+__pycache__/
+*.pyc
+
+# Junk
+.DS_Store
+Thumbs.db
