@@ -11,7 +11,7 @@ def get_weather(city: str):
         response.raise_for_status()
         location_data = response.json()
     except requests.exceptions.RequestException:
-        print("❌ Error: Could not connect to the city search service.")
+        print("Error: Could not connect to the city search service.")
         return
 
     descriptions = {
@@ -44,14 +44,14 @@ def get_weather(city: str):
             print("="*30 + "\n")
 
         except requests.exceptions.RequestException:
-            print("❌ Error: Could not fetch weather data.")
+            print("Error: Could not fetch weather data.")
             
     else:
-        print(f"❌ Error: City '{city}' not found.")
+        print(f"Error: City '{city}' not found.")
 
 # --- This is the new "Engine Starter" ---
 if __name__ == "__main__":
-    print("Welcome to PyWeather CLI!")
+    print("Tempo")
     while True:
         user_city = input("Enter a city name (or type 'quit' to exit): ")
         
