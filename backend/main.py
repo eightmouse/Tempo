@@ -1,63 +1,62 @@
-#--- Modules ---#
-import fastapi
-from fastapi import Query
-from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
 import requests
 
-app = fastapi.FastAPI()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost", "http://127.0.0.1"],
-    allow_methods=["GET"],
-    allow_headers=["*"],
-)
-
-@app.get("/")
-
-def home(city: str = Query(default="London", max_length=50)):
-
+def get_weather(city: str):
     headers = {'User-Agent': 'Mozilla/5.0'}
 
+    # 1. Get City Coordinates
     photon_url = f"https://photon.komoot.io/api/?q={city}&limit=1"
-    response = requests.get(photon_url, headers=headers)
-    location_data = response.json()
+    
+    try:
+        response = requests.get(photon_url, headers=headers)
+        response.raise_for_status()
+        location_data = response.json()
+    except requests.exceptions.RequestException:
+        print("❌ Error: Could not connect to the city search service.")
+        return
 
     descriptions = {
         0: "Sunny",
         1: "Mainly Clear",
-        2: "Partly Clody",
+        2: "Partly Cloudy",
         3: "Overcast"
     }
 
+    # 2. Check if city exists
     if location_data['features']:
-
         coords = location_data['features'][0]['geometry']['coordinates']
         url = f"https://api.open-meteo.com/v1/forecast?latitude={coords[1]}&longitude={coords[0]}&current_weather=true"    
 
+        # 3. Get Weather
         try:
-            response = requests.get(url)
-            response.raise_for_status()
-            data = response.json()
-
-            print(f"DEBUG DATA: {data}")
+            weather_response = requests.get(url)
+            weather_response.raise_for_status()
+            data = weather_response.json()
 
             temperature = data['current_weather']['temperature']
             weathercode = data['current_weather']['weathercode']
-
             status = descriptions.get(weathercode, "Unknown")
 
-            print(f'API request successful.')
+            # --- THE TERMINAL OUTPUT ---
+            print("\n" + "="*30)
+            print(f"🌍 Weather for: {city.upper()}")
+            print(f"🌡️  Temperature: {temperature}°C")
+            print(f"☁️  Status:      {status}")
+            print("="*30 + "\n")
 
-            return {
-                "City": city,
-                "Temperature": temperature,
-                "Description": status,
-                    }
-        
-        except requests.exceptions.RequestException as e:
-            print(f'API request failed: {e}')
-            return {"error": "Could not fetch weather"}
-        
+        except requests.exceptions.RequestException:
+            print("❌ Error: Could not fetch weather data.")
+            
     else:
-        return {"error": "City not found"}
+        print(f"❌ Error: City '{city}' not found.")
+
+# --- This is the new "Engine Starter" ---
+if __name__ == "__main__":
+    print("Welcome to PyWeather CLI!")
+    while True:
+        user_city = input("Enter a city name (or type 'quit' to exit): ")
+        
+        if user_city.lower() == 'quit':
+            print("Goodbye!")
+            break
+            
+        get_weather(user_city)
